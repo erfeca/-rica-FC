@@ -82,6 +82,7 @@ export default function App() {
       'De': err.de,
       'Para': err.para,
       'Explicação': err.explicacao,
+      'Arquivo Referência': err.arquivoReferencia || 'Geral/Língua',
       'Status': '' // Column without filling as requested
     }));
 
@@ -92,7 +93,7 @@ export default function App() {
       ['Data:', session.startTime.toLocaleDateString('pt-BR')],
       ['Duração:', session.duration],
       [], // Empty row
-      ['TIPO DE ERRO', 'CAPÍTULO', 'PÁGINA', 'DE', 'PARA', 'EXPLICAÇÃO', 'STATUS']
+      ['TIPO DE ERRO', 'CAPÍTULO', 'PÁGINA', 'DE', 'PARA', 'EXPLICAÇÃO', 'ARQUIVO REFERÊNCIA', 'STATUS']
     ];
 
     const ws = (window as any).XLSX.utils.json_to_sheet(data, { origin: 'A7', skipHeader: true });
@@ -213,6 +214,7 @@ export default function App() {
                       <th className="px-6 py-4">Tipo</th>
                       <th className="px-6 py-4">De (Original)</th>
                       <th className="px-6 py-4">Para (Sugestão)</th>
+                      <th className="px-6 py-4">Referência</th>
                       <th className="px-6 py-4">Explicação</th>
                     </tr>
                   </thead>
@@ -232,11 +234,20 @@ export default function App() {
                         </td>
                         <td className="px-6 py-4 text-sm text-red-600 line-through decoration-red-300">{error.de}</td>
                         <td className="px-6 py-4 text-sm text-emerald-700 font-medium">{error.para}</td>
+                        <td className="px-6 py-4 text-[10px] text-slate-500 font-medium">
+                          {error.arquivoReferencia ? (
+                            <span className="bg-slate-100 px-2 py-1 rounded border border-slate-200 block truncate max-w-[120px]" title={error.arquivoReferencia}>
+                              {error.arquivoReferencia}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 italic">Geral</span>
+                          )}
+                        </td>
                         <td className="px-6 py-4 text-xs text-slate-500 max-w-xs">{error.explicacao}</td>
                       </tr>
                     )) : (
                       <tr>
-                        <td colSpan={6} className="px-6 py-20 text-center text-slate-400 italic">
+                        <td colSpan={7} className="px-6 py-20 text-center text-slate-400 italic">
                           Nenhum erro encontrado no documento baseado nas referências fornecidas.
                         </td>
                       </tr>

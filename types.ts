@@ -6,6 +6,7 @@ export interface ProofreadingError {
   de: string;
   para: string;
   explicacao: string;
+  arquivoReferencia?: string;
   status: string; // empty by default
 }
 

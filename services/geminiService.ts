@@ -40,7 +40,8 @@ export const proofreadText = async (
       1. Identifique erros de ortografia, gramática, pontuação, sintaxe e concordância.
       2. Tente identificar o "Capítulo" ou seção principal baseado no contexto do texto.
       3. Forneça uma explicação curta e clara para cada correção.
-      4. Se não houver erros na página, retorne uma lista vazia.
+      4. No campo 'arquivoReferencia', indique o nome exato do arquivo (presente no cabeçalho das REGRAS DE REFERÊNCIA) caso a correção seja baseada especificamente nele. Se for uma regra geral da língua, deixe vazio.
+      5. Se não houver erros na página, retorne uma lista vazia.
     `;
 
     try {
@@ -60,6 +61,7 @@ export const proofreadText = async (
                 de: { type: Type.STRING, description: "Trecho original com erro" },
                 para: { type: Type.STRING, description: "Trecho sugerido corrigido" },
                 explicacao: { type: Type.STRING, description: "Explicação técnica da correção" },
+                arquivoReferencia: { type: Type.STRING, description: "Nome do arquivo de referência utilizado como base para esta correção específica" },
               },
               required: ["tipoErro", "pagina", "de", "para", "explicacao"],
             },
