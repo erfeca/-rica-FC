@@ -1,0 +1,85 @@
+
+import { GoogleGenAI, Type } from "@google/genai";
+import { ProofreadingError, PDFPageContent } from '../types';
+
+const MODEL_NAME = 'gemini-3-flash-preview';
+
+export const proofreadText = async (
+  pages: PDFPageContent[],
+  referenceRules: string,
+  onProgress: (page: number, total: number) => void,
+  signal?: AbortSignal
+): Promise<ProofreadingError[]> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+  
+  const allErrors: ProofreadingError[] = [];
+  const totalPages = pages.length;
+
+  // Process in chunks of pages to avoid token limits and maintain quality
+  for (const pageContent of pages) {
+    // Check if the operation was cancelled before processing next page
+    if (signal?.aborted) {
+      throw new Error('AbortError');
+    }
+
+    onProgress(pageContent.pageNumber, totalPages);
+
+    const prompt = `
+      Atue como um revisor profissional de textos em língua portuguesa.
+      Analise o texto a seguir extraído da página ${pageContent.pageNumber} de um documento PDF.
+      Utilize as seguintes regras gramaticais e referências fornecidas como guia principal:
+      
+      --- REGRAS DE REFERÊNCIA ---
+      ${referenceRules}
+      --- FIM DAS REGRAS ---
+
+      TEXTO PARA REVISÃO (Página ${pageContent.pageNumber}):
+      "${pageContent.text}"
+
+      Instruções específicas:
+      1. Identifique erros de ortografia, gramática, pontuação, sintaxe e concordância.
+      2. Tente identificar o "Capítulo" ou seção principal baseado no contexto do texto.
+      3. Forneça uma explicação curta e clara para cada correção.
+      4. Se não houver erros na página, retorne uma lista vazia.
+    `;
+
+    try {
+      const response = await ai.models.generateContent({
+        model: MODEL_NAME,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                tipoErro: { type: Type.STRING, description: "Tipo de erro (ex: Ortografia, Concordância, Pontuação)" },
+                capitulo: { type: Type.STRING, description: "Capítulo ou Seção onde o erro foi encontrado" },
+                pagina: { type: Type.NUMBER, description: "Número da página atual" },
+                de: { type: Type.STRING, description: "Trecho original com erro" },
+                para: { type: Type.STRING, description: "Trecho sugerido corrigido" },
+                explicacao: { type: Type.STRING, description: "Explicação técnica da correção" },
+              },
+              required: ["tipoErro", "pagina", "de", "para", "explicacao"],
+            },
+          },
+        },
+      });
+
+      if (response.text) {
+        const pageErrors: ProofreadingError[] = JSON.parse(response.text).map((err: any) => ({
+          ...err,
+          pagina: pageContent.pageNumber,
+          status: "" // Required empty status column
+        }));
+        allErrors.push(...pageErrors);
+      }
+    } catch (error) {
+      if (signal?.aborted) throw new Error('AbortError');
+      console.error(`Erro ao processar página ${pageContent.pageNumber}:`, error);
+    }
+  }
+
+  return allErrors;
+};
