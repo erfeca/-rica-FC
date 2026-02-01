@@ -25,23 +25,25 @@ export const proofreadText = async (
     onProgress(pageContent.pageNumber, totalPages);
 
     const prompt = `
-      Atue como um revisor profissional de textos em língua portuguesa.
+      Atue como um revisor profissional de textos em língua portuguesa altamente criterioso.
       Analise o texto a seguir extraído da página ${pageContent.pageNumber} de um documento PDF.
-      Utilize as seguintes regras gramaticais e referências fornecidas como guia principal:
       
-      --- REGRAS DE REFERÊNCIA ---
+      --- REGRAS DE REFERÊNCIA (ORDEM DE PRIORIDADE) ---
       ${referenceRules}
       --- FIM DAS REGRAS ---
+
+      REGRA CRÍTICA DE PRIORIDADE:
+      Os documentos de referência acima estão listados em ordem de importância. Em caso de CONFLITOS ou divergências entre as regras ou termos contidos neles, você deve SEMPRE priorizar a regra do documento que aparece primeiro na lista acima.
 
       TEXTO PARA REVISÃO (Página ${pageContent.pageNumber}):
       "${pageContent.text}"
 
       Instruções específicas:
-      1. Identifique erros de ortografia, gramática, pontuação, sintaxe e concordância.
+      1. Identifique erros de ortografia, gramática, pontuação, sintaxe e concordância baseando-se estritamente nas referências (quando aplicável) e na norma culta.
       2. Tente identificar o "Capítulo" ou seção principal baseado no contexto do texto.
-      3. Forneça uma explicação curta e clara para cada correção.
-      4. No campo 'arquivoReferencia', indique o nome exato do arquivo (presente no cabeçalho das REGRAS DE REFERÊNCIA) caso a correção seja baseada especificamente nele. Se for uma regra geral da língua, deixe vazio.
-      5. Se não houver erros na página, retorne uma lista vazia.
+      3. Forneça uma explicação técnica e clara para cada correção.
+      4. No campo 'arquivoReferencia', indique o nome exato do arquivo (conforme cabeçalho nas REGRAS DE REFERÊNCIA) se a correção for baseada em uma regra específica desse documento.
+      5. Se não houver erros na página, retorne uma lista vazia [].
     `;
 
     try {
@@ -61,7 +63,7 @@ export const proofreadText = async (
                 de: { type: Type.STRING, description: "Trecho original com erro" },
                 para: { type: Type.STRING, description: "Trecho sugerido corrigido" },
                 explicacao: { type: Type.STRING, description: "Explicação técnica da correção" },
-                arquivoReferencia: { type: Type.STRING, description: "Nome do arquivo de referência utilizado como base para esta correção específica" },
+                arquivoReferencia: { type: Type.STRING, description: "Nome do arquivo de referência utilizado como base para esta correção" },
               },
               required: ["tipoErro", "pagina", "de", "para", "explicacao"],
             },
@@ -73,7 +75,7 @@ export const proofreadText = async (
         const pageErrors: ProofreadingError[] = JSON.parse(response.text).map((err: any) => ({
           ...err,
           pagina: pageContent.pageNumber,
-          status: "" // Required empty status column
+          status: "" // Required empty status column for final Excel
         }));
         allErrors.push(...pageErrors);
       }

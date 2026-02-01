@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { FileUp, BookOpen, AlertCircle } from 'lucide-react';
+import { FileUp, BookOpen, Info } from 'lucide-react';
 
 interface FileUploaderProps {
   onMainFileChange: (file: File | null) => void;
@@ -73,12 +73,22 @@ export const FileUploader: React.FC<FileUploaderProps> = ({
           </label>
 
           {refFiles.length > 0 && (
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              {refFiles.map((file, idx) => (
-                <span key={idx} className="text-[10px] font-medium text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                  {file.name}
-                </span>
-              ))}
+            <div className="mt-4 w-full">
+              <div className="flex items-center gap-1.5 mb-2 justify-center text-emerald-700">
+                <Info className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase tracking-wider">Ordem de Prioridade</span>
+              </div>
+              <div className="flex flex-wrap justify-center gap-2">
+                {refFiles.map((file, idx) => (
+                  <span key={idx} className="flex items-center gap-1.5 text-[10px] font-medium text-emerald-700 bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <span className="bg-emerald-600 text-white w-4 h-4 flex items-center justify-center rounded-full text-[9px] font-bold">{idx + 1}</span>
+                    {file.name}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-3 text-[9px] text-emerald-600/70 italic px-4">
+                * Caso haja conflito entre referências, a regra do documento com menor número (maior prioridade) será aplicada.
+              </p>
             </div>
           )}
         </div>
